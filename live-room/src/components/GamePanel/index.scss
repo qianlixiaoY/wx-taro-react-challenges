@@ -1,0 +1,140 @@
+.game-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 120;
+}
+
+.game-panel__mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.game-panel__sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 78vh;
+  overflow-y: auto;
+  background: #141428;
+  border-radius: 24px 24px 0 0;
+  padding: 28px 28px calc(28px + constant(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.game-panel__title {
+  display: block;
+  font-size: 34px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.game-panel__section {
+  margin-bottom: 28px;
+}
+
+.game-panel__section-title {
+  display: block;
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.game-panel__section-desc {
+  display: block;
+  font-size: 24px;
+  opacity: 0.72;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.game-panel__wheel-box {
+  position: relative;
+  height: 240px;
+  margin: 16px 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-panel__wheel {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #e94560 0%, #f39c12 35%, #3498db 68%, #9b59b6 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.game-panel__wheel-label {
+  font-size: 30px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.game-panel__wheel-sub {
+  margin-top: 10px;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.game-panel__wheel-pointer {
+  position: absolute;
+  top: 12px;
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-bottom: 22px solid #fff;
+  z-index: 2;
+}
+
+.game-panel__btn {
+  padding: 20px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.game-panel__btn--primary {
+  background: rgba(233, 69, 96, 0.35);
+}
+
+.game-panel__btn.is-disabled {
+  opacity: 0.45;
+}
+
+.game-panel__btn-text {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.game-panel__prize {
+  display: block;
+  margin-top: 14px;
+  font-size: 26px;
+}
+
+.game-panel__prize-strong {
+  color: #f6e58d;
+  font-weight: 700;
+}
+
+.game-panel__close {
+  display: block;
+  text-align: center;
+  padding-top: 12px;
+  font-size: 26px;
+  opacity: 0.65;
+}

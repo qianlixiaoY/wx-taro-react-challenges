@@ -1,0 +1,72 @@
+.live-player-area {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-height: 68vh;
+  background: #000;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.live-player-area--fill {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  aspect-ratio: auto;
+  max-height: none;
+  border-radius: 0;
+}
+
+.live-player-area__media {
+  width: 100%;
+  height: 100%;
+}
+
+.live-player-area__mjpeg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  background: #000;
+}
+
+.live-player-area__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: linear-gradient(160deg, #2d132c 0%, #1b1b2f 100%);
+  box-sizing: border-box;
+}
+
+.live-player-area__placeholder-title {
+  font-size: 36px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.live-player-area__placeholder-desc {
+  font-size: 24px;
+  opacity: 0.75;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.live-player-area__badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(233, 69, 96, 0.92);
+}
+
+.live-player-area__badge-text {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}

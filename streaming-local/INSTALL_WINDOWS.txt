@@ -1,0 +1,68 @@
+纯 Windows 本地直播（RTMP）——软件尽量装在 D:\softwares
+
+一、准备目录（已由脚本下载解压）
+  - FFmpeg（BtbN win64 gpl shared）：目录 D:\softwares\ffmpeg-btbN
+  - 可执行文件：D:\softwares\ffmpeg-btbN\bin\ffmpeg.exe
+  （压缩包仍可在 D:\softwares\ffmpeg-master-latest-win64-gpl-shared.zip，可自行删除省空间）
+
+  说明：若你机器上原有 D:\softwares\ffmpeg 且其中的 ffmpeg.exe 正被占用，无法覆盖；
+        本次安装使用新目录名 ffmpeg-btbN，避免与旧目录冲突。
+  - Node.js：若尚未安装，可装到 D:\softwares\node 并把 bin 加入 PATH（你机器上若已有 Node，可跳过）
+
+二、启动 RTMP 服务端（本仓库 streaming-local）
+  1) 打开终端进入目录：
+       d:\git-repos\taro\live-stream\streaming-local
+  2) 安装依赖：
+       npm install
+  3) 启动：
+       npm start
+
+  成功后会监听：
+    RTMP：1935
+    HTTP-FLV：8001（与 Python uvicorn 默认 8000 区分，避免端口占用）
+
+三、查看摄像头设备名称（Windows DirectShow）
+  在终端执行：
+    D:\softwares\ffmpeg-btbN\bin\ffmpeg.exe -hide_banner -list_devices true -f dshow -i dummy
+
+  在输出里找到 \"DirectShow video devices\" 下列出的名称，复制准确字符串。
+
+四、推流（把摄像头推到本机 RTMP）
+  必须先启动 streaming-local（npm start），再运行 push-camera.bat。
+  若颠倒顺序，FFmpeg 会报连接失败（常见 exit -138），并可能出现 DirectShow
+  “real-time buffer ... too full”——这是因为 RTMP 连不上时编码积压，摄像头缓冲被撑满。
+
+  编辑 push-camera.bat 里的 CAMERA_NAME=你的摄像头名称，然后双击运行；
+  或在终端手动执行同等 ffmpeg 命令。
+
+  推流地址格式（本示例固定）：
+    rtmp://127.0.0.1:1935/live/camera
+
+五、微信小程序 live-player 播放地址（推荐 HTTP-FLV）
+  开发者工具里直接用 RTMP 很容易出现 timeout；live-player 支持 flv/rtmp，本项目默认：
+    http://127.0.0.1:8001/live/camera.flv
+  （需 streaming-local 已启动，且 FFmpeg 正在往 RTMP 推流）
+
+  手机真机预览时，把 127.0.0.1 换成电脑局域网 IP，例如：
+    http://192.168.1.10:8001/live/camera.flv
+
+  防火墙放行 TCP 1935（推流）以及 TCP 8001（HTTP-FLV 拉流）。
+
+  若仍黑屏/超时：
+    - 详情 → 本地设置 → 勾选「不校验合法域名」
+    - 尝试「真机调试」（模拟器对 live-player 支持有限）
+    - 小程序后台「接口设置」中与实时音视频/live-player 相关的权限按官方提示开通（正式类目）
+
+六、与 Python（OpenCV）方案的关系
+  Python + JPEG/MJPEG 适合快速验证画面；正式小程序直播建议 RTMP + live-player。
+  原 server/main.py 仍可保留给 H5 MJPEG 演示。
+
+七、手机真机仍黑屏时
+  1) 首页需点「进入直播间」，直播页才有画面区域。
+  2) 手机浏览器访问（与小程序同 Wi‑Fi）：
+       http://你的电脑IP:8001/live/camera.flv
+     若浏览器也不能持续下载，优先查防火墙 / 路由器 AP 隔离。
+  3) live-player 需在小程序公众平台开通相关接口并完成类目要求；未开通时组件可能一直黑屏。
+     可临时在 live-room/src/constants/stream.ts 把
+       WEAPP_USE_JPEG_PREVIEW_INSTEAD_OF_LIVE_PLAYER 设为 true，
+     并启动 Python（uvicorn）提供 /frame.jpg，用手机同一局域网 IP 访问 8000。

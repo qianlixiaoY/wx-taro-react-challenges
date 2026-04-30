@@ -1,0 +1,77 @@
+@keyframes red-rain-fall {
+  0% {
+    transform: translateY(-120%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh);
+    opacity: 0.95;
+  }
+}
+
+.red-rain {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  overflow: hidden;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.red-rain__hud {
+  position: absolute;
+  top: constant(safe-area-inset-top);
+  left: 0;
+  right: 0;
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+}
+
+.red-rain__hud-title {
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.red-rain__hud-score {
+  font-size: 28px;
+  opacity: 0.9;
+}
+
+.red-rain__packet {
+  position: absolute;
+  top: -10%;
+  width: 72px;
+  height: 96px;
+  margin-left: -36px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ff6b6b 0%, #c0392b 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation-name: red-rain-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+.red-rain__packet-text {
+  font-size: 30px;
+  font-weight: 800;
+  color: #fff6d5;
+}
+
+.red-rain__tip {
+  position: absolute;
+  bottom: 120px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 24px;
+  opacity: 0.75;
+}

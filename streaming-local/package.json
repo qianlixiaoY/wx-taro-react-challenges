@@ -1,0 +1,11 @@
+{
+  "name": "streaming-local",
+  "private": true,
+  "description": "本地 RTMP 接收端（纯 Windows + Node.js），用于 FFmpeg 推摄像头",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "node-media-server": "^2.6.2"
+  }
+}

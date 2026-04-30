@@ -1,0 +1,54 @@
+.home {
+  min-height: 100vh;
+  padding: 48px 32px;
+  box-sizing: border-box;
+  background: linear-gradient(165deg, #1a1a2e 0%, #16213e 45%, #0f3460 100%);
+}
+
+.home__hero {
+  margin-bottom: 48px;
+}
+
+.home__title {
+  display: block;
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+
+.home__subtitle {
+  display: block;
+  font-size: 26px;
+  opacity: 0.85;
+  line-height: 1.5;
+}
+
+.home__card {
+  padding: 36px 28px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 32px;
+}
+
+.home__card-title {
+  display: block;
+  font-size: 34px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.home__card-desc {
+  display: block;
+  font-size: 26px;
+  opacity: 0.75;
+  line-height: 1.45;
+}
+
+.home__hint {
+  display: block;
+  font-size: 22px;
+  opacity: 0.55;
+  line-height: 1.5;
+}

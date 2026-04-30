@@ -1,0 +1,125 @@
+.live-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #050508;
+}
+
+.live-page__stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  background: #000;
+}
+
+.live-page__dock {
+  flex-shrink: 0;
+  position: relative;
+  width: 100%;
+  margin-top: -160px;
+  padding-top: 72px;
+  padding-bottom: calc(16px + constant(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 5, 8, 0) 0%,
+    rgba(5, 5, 8, 0.55) 26%,
+    rgba(5, 5, 8, 0.92) 62%,
+    rgba(5, 5, 8, 1) 100%
+  );
+}
+
+/**
+ * camera 是原生组件层，通常会盖住同页面的普通 View（尤其是发生“叠层”布局时）。
+ * 因此在 camera 模式下关闭 dock 对 stage 的负 margin 叠加，让互动区真实位于 camera 下方。
+ */
+.live-page--camera {
+  .live-page__dock {
+    margin-top: 0;
+    padding-top: 16px;
+  }
+}
+
+.live-page__danmaku {
+  width: 100%;
+  padding: 0 24px 12px;
+  box-sizing: border-box;
+  max-height: 220px;
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.live-page__danmaku-row {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.live-page__danmaku-pill {
+  max-width: 100%;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-page__danmaku-nick {
+  flex-shrink: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ff8fb3;
+}
+
+.live-page__danmaku-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 24px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.94);
+  word-break: break-all;
+}
+
+.live-page__composer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px 14px;
+  pointer-events: auto;
+}
+
+.live-page__composer-input {
+  flex: 1;
+  height: 80px;
+  padding: 0 28px;
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-sizing: border-box;
+  font-size: 28px;
+  color: #fff;
+}
+
+.live-page__composer-placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.live-page__composer-send {
+  flex-shrink: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #ff8fab;
+  padding: 16px 12px;
+}
