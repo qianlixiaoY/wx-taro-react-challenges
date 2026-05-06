@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import Taro, { useShareAppMessage } from '@tarojs/taro'
-import { View, Text, Input } from '@tarojs/components'
+import { View, Text, Input, Button } from '@tarojs/components'
 
 import { LivePlayerArea } from '@/components/LivePlayerArea'
 import { InteractionBar } from '@/components/InteractionBar'
@@ -23,7 +23,30 @@ export default function LivePage() {
   const [rain, setRain] = useState(false)
   const [comments, setComments] = useState<CommentItem[]>(() => [
     { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' }
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
+    { id: uid(), nick: '路人甲', text: '画质不错！' },
+
   ])
 
   useShareAppMessage(() => ({
@@ -85,8 +108,32 @@ export default function LivePage() {
 
   return (
     <View className={rootClass}>
+      <View className='live-page_header'>
+        <View className='live-page_titlewrapper'>
+            <View className='live-page_avatar'>
+            </View>
+            <View className='live-page_title'>
+              直播服务号
+            </View>
+            <Button type='primary' size='mini'>
+              关注
+            </Button>
+        </View>
+        <View>
+
+        </View>
+      </View>
       <View className='live-page__stage'>
         <LivePlayerArea fill />
+      </View>
+
+      <View className='live-page_bullet_wrapper'>
+        <View className='live-page_bullet_newfan'>
+          xxx来了
+        </View>
+        <View>
+          
+        </View>
       </View>
 
       <View className='live-page__dock'>

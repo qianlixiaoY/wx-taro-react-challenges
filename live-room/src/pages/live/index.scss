@@ -5,14 +5,51 @@
   overflow: hidden;
   box-sizing: border-box;
   background: #050508;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.live-page_header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.live-page_titlewrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.live-page_avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #fff;
+  margin-right: 20px;
+}
+
+.live-page_title {
+  margin-right: 20px;
 }
 
 .live-page__stage {
   flex: 1;
-  min-height: 0;
   width: 100%;
   position: relative;
   background: #000;
+}
+
+.live-page_bullet_wrapper {
+  position: relative;
+}
+
+.live-page_bullet_newfan {
+  position: absolute;
+  top: 10px;
+  margin-left: 10px;
 }
 
 .live-page__dock {

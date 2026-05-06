@@ -84,12 +84,15 @@ export function LivePlayerArea({ weappSrc, h5MjpegSrc, fill }: LivePlayerAreaPro
 
   const rootClass = fill ? 'live-player-area live-player-area--fill' : 'live-player-area'
 
+  const cameraClass = fill ? 'live-player-area-half-fill' : 'live-player-area__media'
+  // const rootClass =  'live-player-area';
+
   return (
     <View className={rootClass}>
       {isWeapp ? (
         enableCamera ? (
           <Camera
-            className='live-player-area__media'
+            className={cameraClass}
             mode='normal'
             devicePosition='front'
             flash='off'
