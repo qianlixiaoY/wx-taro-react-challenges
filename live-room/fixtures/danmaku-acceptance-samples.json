@@ -1,0 +1,30 @@
+[
+  {
+    "id": "msg-615",
+    "user": { "avatar": "https://dummyimage.com/64x64/4a90d9/ffffff.png&text=A", "name": "用户A" },
+    "text": "主播加油！",
+    "color": "#FF0000",
+    "sendTime": 1722968348123
+  },
+  {
+    "id": "msg-highlight-1",
+    "user": { "avatar": "https://dummyimage.com/64x64/e94b7a/ffffff.png&text=B", "name": "粉丝鑫**" },
+    "text": "666 主播今天状态太好了",
+    "color": "#FFFFFF",
+    "sendTime": 1722968348200
+  },
+  {
+    "id": "msg-filter-1",
+    "user": { "avatar": "https://dummyimage.com/64x64/50c878/ffffff.png&text=C", "name": "路人" },
+    "text": "垃圾广告请不要信",
+    "color": "#AAAAAA",
+    "sendTime": 1722968348260
+  },
+  {
+    "id": "msg-plain",
+    "user": { "avatar": "https://dummyimage.com/64x64/f5a623/ffffff.png&text=D", "name": "念祈" },
+    "text": "哦豁，一个高密的居然位列四品",
+    "color": "#FFFFFF",
+    "sendTime": 1722968348320
+  }
+]

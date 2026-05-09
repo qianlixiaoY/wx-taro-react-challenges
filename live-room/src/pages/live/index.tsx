@@ -1,60 +1,127 @@
-import { useCallback, useMemo, useState } from 'react'
-import Taro, { useShareAppMessage } from '@tarojs/taro'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Taro, { getCurrentInstance, useShareAppMessage } from '@tarojs/taro'
 import { View, Text, Input, Button } from '@tarojs/components'
 
 import { LivePlayerArea } from '@/components/LivePlayerArea'
 import { InteractionBar } from '@/components/InteractionBar'
-import type { CommentItem } from '@/components/CommentPanel'
+import { FlyingDanmakuLayer, type FlyingDanmakuHandle } from '@/components/FlyingDanmakuLayer'
+import { DanmakuHistorySheet } from '@/components/DanmakuHistorySheet'
 import { RedPacketRain } from '@/components/RedPacketRain'
 import { GamePanel } from '@/components/GamePanel'
 import { WEAPP_USE_CAMERA_COMPONENT } from '@/constants/stream'
+import type { DanmakuMessage } from '@/types/danmaku'
+import { DANMAKU_ACCEPTANCE_SAMPLES, makeDanmakuBatch } from '@/utils/danmakuSamples'
+import { formatProofLines, runFullDanmakuProof } from '@/utils/danmakuProof'
 
 import './index.scss'
+
+/** 避免 React 18 Strict 开发模式下 useEffect 双调用导致重复灌入种子弹幕 */
+let liveDanmakuSeedApplied = false
+
+/** 避免带 proof=1 进入时弹窗出现两次 */
+let liveDanmakuProofParamShown = false
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
+function pushHistory(ref: { current: DanmakuMessage[] }, m: DanmakuMessage) {
+  ref.current.push(m)
+  if (ref.current.length > 12000) ref.current.splice(0, ref.current.length - 12000)
+}
+
 export default function LivePage() {
+  const historyRef = useRef<DanmakuMessage[]>([])
+  const flyRef = useRef<FlyingDanmakuHandle>(null)
+  const stressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const stressIndexRef = useRef(0)
+
   const [likes, setLikes] = useState(1288)
   const [composerOpen, setComposerOpen] = useState(false)
   const [draft, setDraft] = useState('')
   const [gamesOpen, setGamesOpen] = useState(false)
   const [rain, setRain] = useState(false)
-  const [comments, setComments] = useState<CommentItem[]>(() => [
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
-    { id: uid(), nick: '粉丝A', text: '主播晚上好～' },
-    { id: uid(), nick: '路人甲', text: '画质不错！' },
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [stressing, setStressing] = useState(false)
+  const [stressHint, setStressHint] = useState('')
+  const [dockPreview, setDockPreview] = useState<DanmakuMessage[]>([])
 
-  ])
+  const syncDockFromHistory = useCallback(() => {
+    setDockPreview(historyRef.current.slice(-10))
+  }, [])
+
+  const appendMessage = useCallback(
+    (m: DanmakuMessage) => {
+      pushHistory(historyRef, m)
+      flyRef.current?.ingest(m)
+      syncDockFromHistory()
+    },
+    [syncDockFromHistory]
+  )
 
   useShareAppMessage(() => ({
     title: '正在直播：互动直播间',
     path: '/pages/live/index'
   }))
 
-  const danmakuLines = useMemo(() => comments.slice(-8), [comments])
+  const getHistorySnapshot = useCallback(() => [...historyRef.current].reverse(), [])
+
+  useEffect(() => {
+    const p = getCurrentInstance()?.router?.params
+    if (p?.proof !== '1' || liveDanmakuProofParamShown) return
+    liveDanmakuProofParamShown = true
+    const { pass, lines } = runFullDanmakuProof()
+    void Taro.showModal({
+      title: pass ? '弹幕自检通过' : '弹幕自检失败',
+      content: formatProofLines(lines)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (liveDanmakuSeedApplied) return
+    liveDanmakuSeedApplied = true
+    const seed = [...DANMAKU_ACCEPTANCE_SAMPLES, ...makeDanmakuBatch(0, 6)]
+    for (const m of seed) pushHistory(historyRef, m)
+    syncDockFromHistory()
+    queueMicrotask(() => {
+      for (const m of seed) flyRef.current?.ingest(m)
+    })
+  }, [syncDockFromHistory])
+
+  const runProofUi = useCallback(() => {
+    const { pass, lines } = runFullDanmakuProof()
+    void Taro.showModal({
+      title: pass ? '弹幕自检通过' : '弹幕自检失败',
+      content: formatProofLines(lines)
+    })
+  }, [])
+
+  const injectAcceptance = useCallback(() => {
+    for (const m of DANMAKU_ACCEPTANCE_SAMPLES) {
+      appendMessage({ ...m, id: `${m.id}-${uid()}`, sendTime: Date.now() })
+    }
+  }, [appendMessage])
+
+  const toggleStress = useCallback(() => {
+    if (stressTimerRef.current) {
+      clearInterval(stressTimerRef.current)
+      stressTimerRef.current = null
+      setStressing(false)
+      const st = flyRef.current?.getStats()
+      setStressHint(st ? `积压 ${st.pending} · 丢弃 ${st.dropped} · 在屏 ${st.flying}` : '')
+      void Taro.showToast({ title: '已停止压力测试', icon: 'none' })
+      return
+    }
+    setStressHint('')
+    setStressing(true)
+    stressTimerRef.current = setInterval(() => {
+      const batch = makeDanmakuBatch(stressIndexRef.current, 20)
+      stressIndexRef.current += 20
+      for (const m of batch) pushHistory(historyRef, m)
+      flyRef.current?.ingestMany(batch)
+      syncDockFromHistory()
+    }, 20)
+  }, [syncDockFromHistory])
 
   const handleLike = useCallback(() => {
     setLikes((n) => n + 1)
@@ -75,10 +142,23 @@ export default function LivePage() {
     void Taro.showToast({ title: '请在宿主环境使用转发能力', icon: 'none' })
   }, [])
 
-  const sendComment = useCallback((text: string) => {
-    setComments((list) => [...list, { id: uid(), nick: '我', text }])
-    void Taro.showToast({ title: '已发送', icon: 'success', duration: 900 })
-  }, [])
+  const sendComment = useCallback(
+    (text: string) => {
+      const m: DanmakuMessage = {
+        id: uid(),
+        user: {
+          avatar: 'https://dummyimage.com/64x64/eeeeee/333333.png&text=ME',
+          name: '我'
+        },
+        text,
+        color: '#FFFFFF',
+        sendTime: Date.now()
+      }
+      appendMessage(m)
+      void Taro.showToast({ title: '已发送', icon: 'success', duration: 900 })
+    },
+    [appendMessage]
+  )
 
   const submitDraft = useCallback(() => {
     const t = draft.trim()
@@ -110,74 +190,94 @@ export default function LivePage() {
     <View className={rootClass}>
       <View className='live-page_header'>
         <View className='live-page_titlewrapper'>
-            <View className='live-page_avatar'>
-            </View>
-            <View className='live-page_title'>
-              直播服务号
-            </View>
-            <Button type='primary' size='mini'>
-              关注
-            </Button>
+          <View className='live-page_avatar' />
+          <View className='live-page_title'>直播服务号</View>
+          <Button type='primary' size='mini'>
+            关注
+          </Button>
         </View>
-        <View>
-
-        </View>
+        <View />
       </View>
       <View className='live-page__stage'>
         <LivePlayerArea fill />
+        <FlyingDanmakuLayer ref={flyRef} />
       </View>
 
       <View className='live-page_bullet_wrapper'>
         <View className='live-page_bullet_newfan'>
-          xxx来了
-        </View>
-        <View>
-          
+          {stressing ? (
+            <Text className='live-page_bullet_hint'>压力测试：约 1000 条/秒入队（飞行层多轨 + 队列背压）</Text>
+          ) : stressHint ? (
+            <Text className='live-page_bullet_hint'>{stressHint}</Text>
+          ) : (
+            <Text className='live-page_bullet_hint'>飞行弹幕 · 头像 · 关键词高亮/过滤 · 多轨防重叠</Text>
+          )}
         </View>
       </View>
 
       <View className='live-page__dock'>
         <View className='live-page__danmaku'>
-          {danmakuLines.map((c) => (
+          {dockPreview.map((c) => (
             <View key={c.id} className='live-page__danmaku-row'>
               <View className='live-page__danmaku-pill'>
-                <Text className='live-page__danmaku-nick'>{c.nick}</Text>
+                <Text className='live-page__danmaku-nick'>{c.user.name}</Text>
                 <Text className='live-page__danmaku-text'>{c.text}</Text>
               </View>
             </View>
           ))}
         </View>
 
-        {composerOpen ? (
-          <View className='live-page__composer'>
-            <Input
-              className='live-page__composer-input'
-              value={draft}
-              placeholder='发个弹幕…'
-              placeholderClass='live-page__composer-placeholder'
-              maxlength={80}
-              confirmType='send'
-              adjustPosition
-              cursorSpacing={72}
-              focus
-              onInput={(e) => setDraft(e.detail.value)}
-              onConfirm={submitDraft}
-            />
-            <Text className='live-page__composer-send' onClick={submitDraft}>
-              发送
-            </Text>
-          </View>
-        ) : null}
+        <View className='live-page__dm-tools'>
+          <Text className='live-page__dm-tools-item' onClick={() => setHistoryOpen(true)}>
+            历史弹幕
+          </Text>
+          <Text className='live-page__dm-tools-item' onClick={injectAcceptance}>
+            注入样例
+          </Text>
+          <Text className='live-page__dm-tools-item' onClick={toggleStress}>
+            {stressing ? '停止压力' : '压力~1000/s'}
+          </Text>
+          <Text className='live-page__dm-tools-item' onClick={runProofUi}>
+            自检
+          </Text>
+        </View>
 
-        <InteractionBar
+        <View className='live-page__composer'>
+          <Input
+            className='live-page__composer-input'
+            value={draft}
+            placeholder='发个弹幕…'
+            placeholderClass='live-page__composer-placeholder'
+            maxlength={60}
+            confirmType='send'
+            adjustPosition
+            cursorSpacing={72}
+            focus
+            onInput={(e) => setDraft(e.detail.value)}
+            onConfirm={submitDraft}
+          />
+          <Text className='live-page__composer-send' onClick={submitDraft}>
+            发送
+          </Text>
+          <Text className='interaction-bar__label' onClick={handleShare}>转发</Text>
+          <Text className='interaction-bar__label' onClick={() => setGamesOpen(true)}>玩法</Text>
+        </View>
+
+        {/* <InteractionBar
           likeCount={likes}
           commentActive={composerOpen}
           onLike={handleLike}
           onComment={toggleComposer}
           onShare={handleShare}
           onOpenGames={() => setGamesOpen(true)}
-        />
+        /> */}
       </View>
+
+      <DanmakuHistorySheet
+        visible={historyOpen}
+        getMessages={getHistorySnapshot}
+        onClose={() => setHistoryOpen(false)}
+      />
 
       <GamePanel
         visible={gamesOpen}

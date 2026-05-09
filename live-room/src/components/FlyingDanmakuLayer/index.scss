@@ -1,0 +1,97 @@
+/**
+ * 仅使用 translate3d(0) → translate3d(var(--fly-end))，避免 vw 与 % 混用
+ * 在部分 WebView（含小程序）keyframes 插值异常导致弹幕飞到一半停住。
+ */
+@keyframes flyDmMarquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--fly-end, -400px), 0, 0);
+  }
+}
+
+.fly-dm {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.fly-dm__track {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/** 弹幕从容器右缘外侧入场：left 100% = 轨道右边界 */
+.fly-dm__anchor {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+}
+
+.fly-dm__slide {
+  animation-name: flyDmMarquee;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  will-change: transform;
+}
+
+.fly-dm__bubble {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-sizing: border-box;
+  max-width: 92vw;
+  white-space: nowrap;
+}
+
+.fly-dm__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.fly-dm__pill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.fly-dm__name {
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+.fly-dm__colon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.fly-dm__text {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.fly-dm__hl {
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(255, 221, 85, 0.55);
+}

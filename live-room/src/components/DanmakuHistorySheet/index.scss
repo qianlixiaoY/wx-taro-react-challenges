@@ -1,0 +1,127 @@
+.dm-history {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+}
+
+.dm-history__mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.dm-history__sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 72vh;
+  background: #121218;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding-bottom: calc(12px + constant(safe-area-inset-bottom));
+}
+
+.dm-history__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 18px 10px;
+}
+
+.dm-history__title {
+  font-size: 30px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dm-history__close {
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.72);
+  padding: 10px;
+}
+
+.dm-history__search {
+  padding: 0 18px 12px;
+}
+
+.dm-history__input {
+  height: 72px;
+  border-radius: 14px;
+  padding: 0 18px;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 26px;
+}
+
+.dm-history__list {
+  flex: 1;
+  min-height: 200px;
+  padding: 0 18px 18px;
+  box-sizing: border-box;
+}
+
+.dm-history__row {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dm-history__time {
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+}
+
+.dm-history__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.dm-history__nick {
+  font-size: 26px;
+  font-weight: 700;
+  color: #ff8fb3;
+}
+
+.dm-history__tag {
+  font-size: 20px;
+  color: rgba(255, 200, 120, 0.95);
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(255, 200, 120, 0.12);
+  border: 1px solid rgba(255, 200, 120, 0.22);
+}
+
+.dm-history__id {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 6px;
+}
+
+.dm-history__text {
+  font-size: 26px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.92);
+  word-break: break-all;
+}
+
+.dm-history__hl {
+  color: #ffdd55;
+  font-weight: 700;
+}
+
+.dm-history__empty {
+  display: block;
+  padding: 40px 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 26px;
+}

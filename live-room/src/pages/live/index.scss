@@ -40,6 +40,16 @@
   width: 100%;
   position: relative;
   background: #000;
+  min-height: 0;
+}
+
+.live-page_bullet_hint {
+  font-size: 22px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.78);
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
 }
 
 .live-page_bullet_wrapper {
@@ -50,6 +60,23 @@
   position: absolute;
   top: 10px;
   margin-left: 10px;
+  max-width: calc(100% - 24px);
+}
+
+.live-page__dm-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  padding: 0 24px 12px;
+  pointer-events: auto;
+}
+
+.live-page__dm-tools-item {
+  font-size: 24px;
+  color: rgba(255, 200, 220, 0.95);
+  padding: 8px 0;
+  text-decoration: underline;
+  text-underline-offset: 6px;
 }
 
 .live-page__dock {
