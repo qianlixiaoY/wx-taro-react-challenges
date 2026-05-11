@@ -23,9 +23,10 @@ import type { DanmakuMessage } from '@/types/danmaku'
 import { decorateDanmakuMessage, type TextSegment } from '@/utils/danmakuKeyword'
 import {
   estimateDanmakuWidthPx,
+  flightDistancePx,
   flightDurationMs,
-  pickLaneForSpawn,
-  type LaneActive
+  laneSlotDurationMs,
+  pickLaneByNextAllowTime
 } from '@/utils/danmakuLanes'
 
 import './index.scss'
@@ -62,14 +63,17 @@ function readScreenW(): number {
 }
 
 export const FlyingDanmakuLayer = forwardRef<FlyingDanmakuHandle, FlyingDanmakuLayerProps>(
-  function FlyingDanmakuLayer({ topInsetPx = 56 }, ref) {
+  function FlyingDanmakuLayer({ topInsetPx = 20 }, ref) {
     const screenWRef = useRef(readScreenW())
     const [layoutW, setLayoutW] = useState(() => readScreenW())
     const pendingRef = useRef<DanmakuMessage[]>([])
     const droppedRef = useRef(0)
-    const lanesRef = useRef<LaneActive[][]>(
-      Array.from({ length: DANMAKU_LANE_COUNT }, () => [] as LaneActive[])
-    )
+    /** 每条轨道下一次允许发射的时间戳（performance.now 空间） */
+    const nextAllowRef = useRef<number[]>(Array.from({ length: DANMAKU_LANE_COUNT }, () => 0))
+    /** 延迟到 spawnAt 再挂到 rows（替代每条弹幕一个 setTimeout） */
+    const pendingMountsRef = useRef<{ spawnAt: number; row: RowModel }[]>([])
+    /** 到 removeAt 从 rows 移除（替代 animation 结束 setTimeout） */
+    const pendingRemovesRef = useRef<{ id: string; removeAt: number }[]>([])
     const rafRef = useRef<number | null>(null)
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const flyingCountRef = useRef(0)
@@ -78,14 +82,39 @@ export const FlyingDanmakuLayer = forwardRef<FlyingDanmakuHandle, FlyingDanmakuL
     const laneHeight = useMemo(() => 40, [])
     const laneGap = useMemo(() => 6, [])
 
-    const removeRow = useCallback((id: string, lane: number) => {
-      lanesRef.current[lane] = lanesRef.current[lane].filter((x) => x.id !== id)
-      setRows((prev) => prev.filter((r) => r.id !== id))
-    }, [])
-
     const tick = useCallback(() => {
       const W = screenWRef.current
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
+
+      const flushScheduled = (t: number) => {
+        const removeIds = new Set<string>()
+        for (const p of pendingRemovesRef.current) {
+          if (p.removeAt <= t) removeIds.add(p.id)
+        }
+        pendingRemovesRef.current = pendingRemovesRef.current.filter((p) => p.removeAt > t)
+
+        const toMount: RowModel[] = []
+        const keep: { spawnAt: number; row: RowModel }[] = []
+        for (const p of pendingMountsRef.current) {
+          if (p.spawnAt <= t) toMount.push(p.row)
+          else keep.push(p)
+        }
+        pendingMountsRef.current = keep
+
+        if (removeIds.size === 0 && toMount.length === 0) return
+
+        setRows((prev) => {
+          const next = prev.filter((r) => !removeIds.has(r.id)).concat(toMount)
+          return next
+        })
+
+        for (const row of toMount) {
+          pendingRemovesRef.current.push({ id: row.id, removeAt: t + row.durationMs + 40 })
+        }
+      }
+
+      flushScheduled(now)
+
       let budget = DANMAKU_MAX_SPAWN_PER_TICK
 
       while (budget > 0 && pendingRef.current.length > 0) {
@@ -103,15 +132,12 @@ export const FlyingDanmakuLayer = forwardRef<FlyingDanmakuHandle, FlyingDanmakuL
           continue
         }
 
-        const w = estimateDanmakuWidthPx(msg.text, W)
-        const lane = pickLaneForSpawn(lanesRef.current, now, w, W, DANMAKU_SPEED_PX_PER_MS)
-        if (lane === null) {
-          pendingRef.current.unshift(msg)
-          break
-        }
+        const w = estimateDanmakuWidthPx(msg.text)
+        const { lane, spawnAt } = pickLaneByNextAllowTime(nextAllowRef.current, now)
+        const slotMs = laneSlotDurationMs(W, w, DANMAKU_SPEED_PX_PER_MS)
+        nextAllowRef.current[lane] = spawnAt + slotMs
 
         const durationMs = flightDurationMs(W, w, DANMAKU_SPEED_PX_PER_MS)
-        lanesRef.current[lane].push({ id: msg.id, lane, t0: now, w })
 
         const row: RowModel = {
           id: msg.id,
@@ -121,15 +147,11 @@ export const FlyingDanmakuLayer = forwardRef<FlyingDanmakuHandle, FlyingDanmakuL
           segments
         }
 
-        setRows((prev) => [...prev, row])
-
-        const tid = msg.id
-        const ln = lane
-        setTimeout(() => {
-          removeRow(tid, ln)
-        }, durationMs + 40)
+        pendingMountsRef.current.push({ spawnAt, row })
       }
-    }, [removeRow])
+
+      flushScheduled(now)
+    }, [])
 
     useImperativeHandle(ref, () => ({
       ingest: (msg) => {
@@ -155,7 +177,9 @@ export const FlyingDanmakuLayer = forwardRef<FlyingDanmakuHandle, FlyingDanmakuL
       }),
       clear: () => {
         pendingRef.current.length = 0
-        lanesRef.current = Array.from({ length: DANMAKU_LANE_COUNT }, () => [])
+        pendingMountsRef.current.length = 0
+        pendingRemovesRef.current.length = 0
+        nextAllowRef.current = Array.from({ length: DANMAKU_LANE_COUNT }, () => 0)
         droppedRef.current = 0
         flyingCountRef.current = 0
         setRows([])
@@ -203,8 +227,8 @@ export const FlyingDanmakuLayer = forwardRef<FlyingDanmakuHandle, FlyingDanmakuL
         {rows.map((r) => {
           const top = topInsetPx + r.lane * (laneHeight + laneGap)
           const W = layoutW
-          const itemW = estimateDanmakuWidthPx(r.message.text, W)
-          const flyEndPx = -(W + itemW + 32)
+          const itemW = estimateDanmakuWidthPx(r.message.text)
+          const flyEndPx = -flightDistancePx(W, itemW)
           return (
             <View
               key={r.id}

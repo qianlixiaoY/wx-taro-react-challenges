@@ -26,5 +26,33 @@
     "text": "哦豁，一个高密的居然位列四品",
     "color": "#FFFFFF",
     "sendTime": 1722968348320
+  },
+  {
+    "id": "msg-616",
+    "user": { "avatar": "https://dummyimage.com/64x64/4a90d9/ffffff.png&text=A", "name": "用户B" },
+    "text": "主播加油！XXXXXXXX",
+    "color": "#FF0000",
+    "sendTime": 1722968348123
+  },
+  {
+    "id": "msg-highlight-1",
+    "user": { "avatar": "https://dummyimage.com/64x64/4a90d9/ffffff.png&text=A", "name": "用户C" },
+    "text": "666 主播今天状态太好了",
+    "color": "#FFFFFF",
+    "sendTime": 1722968348200
+  },
+  {
+    "id": "msg-filter-1",
+    "user": { "avatar": "https://dummyimage.com/64x64/50c878/ffffff.png&text=C", "name": "用户D" },
+    "text": "垃圾广告请不要信",
+    "color": "#AAAAAA",
+    "sendTime": 1722968348260
+  },
+  {
+    "id": "msg-plain",
+    "user": { "avatar": "https://dummyimage.com/64x64/f5a623/ffffff.png&text=D", "name": "用户E" },
+    "text": "哦豁，一个高密的居然位列四品",
+    "color": "#FFFFFF",
+    "sendTime": 1722968348320
   }
 ]

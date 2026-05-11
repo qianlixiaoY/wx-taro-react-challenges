@@ -1,17 +1,15 @@
 import {
   DANMAKU_FILTER_KEYWORDS,
   DANMAKU_HIGHLIGHT_KEYWORDS,
-  DANMAKU_LANE_GAP_PX,
   DANMAKU_SPEED_PX_PER_MS
 } from '@/constants/danmaku'
 import { isBlockedFromFlying, splitHighlightSegments } from '@/utils/danmakuKeyword'
 import {
   estimateDanmakuWidthPx,
+  flightDistancePx,
   flightDurationMs,
-  laneCollidesAtSpawn,
-  pickLaneForSpawn,
-  pruneLaneActives,
-  type LaneActive
+  laneSlotDurationMs,
+  pickLaneByNextAllowTime
 } from '@/utils/danmakuLanes'
 import { DANMAKU_ACCEPTANCE_SAMPLES } from '@/utils/danmakuSamples'
 
@@ -31,8 +29,8 @@ function fail(msg: string): ProofLine {
 export function runDanmakuProofSuite(): ProofLine[] {
   const lines: ProofLine[] = []
 
-  const w1 = estimateDanmakuWidthPx('短', 390)
-  const w2 = estimateDanmakuWidthPx('这是一段明显更长的弹幕文本用于宽度估算', 390)
+  const w1 = estimateDanmakuWidthPx('短')
+  const w2 = estimateDanmakuWidthPx('这是一段明显更长的弹幕文本用于宽度估算')
   lines.push(w2 > w1 ? ok('宽度估算随文本增长') : fail('宽度估算未随文本增长'))
 
   const segs = splitHighlightSegments('主播666真棒', DANMAKU_HIGHLIGHT_KEYWORDS)
@@ -54,34 +52,34 @@ export function runDanmakuProofSuite(): ProofLine[] {
   const screenW = 390
   const speed = DANMAKU_SPEED_PX_PER_MS
   const now = 10_000
-  const existing: LaneActive[] = [{ id: 'a', lane: 0, t0: now - 200, w: 220 }]
+  const n = 7
+  const busy0 = Array.from({ length: n }, (_, i) => (i === 0 ? now + 5000 : 0))
+  const pickReady = pickLaneByNextAllowTime(busy0, now)
   lines.push(
-    laneCollidesAtSpawn(existing, now, 200, screenW, speed, DANMAKU_LANE_GAP_PX)
-      ? ok('同轨碰撞检测：应判定重叠')
-      : fail('同轨碰撞检测：应重叠但未检出')
+    pickReady.lane === 1 && pickReady.spawnAt === now
+      ? ok('nextAllow 调度：有空轨时 spawnAt 为当前时刻')
+      : fail(`nextAllow 空轨：期望 lane=1 spawnAt=${now}，实际 lane=${pickReady.lane} spawnAt=${pickReady.spawnAt}`)
   )
 
-  const emptyLane: LaneActive[] = []
+  const allBusy = Array.from({ length: n }, () => now + 3000)
+  const pickWait = pickLaneByNextAllowTime(allBusy, now)
   lines.push(
-    !laneCollidesAtSpawn(emptyLane, now, 200, screenW, speed, DANMAKU_LANE_GAP_PX)
-      ? ok('空轨道不碰撞')
-      : fail('空轨道误判碰撞')
+    pickWait.lane === 0 && pickWait.spawnAt === now + 3000
+      ? ok('nextAllow 调度：全忙时选最小 next 且 spawnAt 为最早可发射')
+      : fail(`nextAllow 全忙：期望 lane=0 spawnAt=${now + 3000}，实际 lane=${pickWait.lane} spawnAt=${pickWait.spawnAt}`)
   )
 
-  const lanes: LaneActive[][] = [[{ id: 'x', lane: 0, t0: now - 20_000, w: 100 }], [], [], [], [], [], []]
-  const picked = pickLaneForSpawn(lanes, now, 180, screenW, speed)
-  lines.push(picked !== null ? ok(`多轨调度：找到轨道 #${picked}`) : fail('多轨调度失败'))
+  const slot = laneSlotDurationMs(screenW, 100, speed)
+  lines.push(slot > 0 ? ok('轨道时间片 laneSlotDurationMs > 0') : fail('轨道时间片应大于 0'))
 
-  const pruned = pruneLaneActives(
-    [{ id: 'old', lane: 0, t0: 0, w: 100 }],
-    now + 999_999,
-    screenW,
-    speed
+  const wProbe = 300
+  const distProbe = flightDistancePx(screenW, wProbe)
+  const d = flightDurationMs(screenW, wProbe)
+  lines.push(
+    d === Math.max(100, Math.ceil(distProbe / speed))
+      ? ok('飞行时长与路程/速度一致（同速）')
+      : fail('飞行时长与路程/速度不一致')
   )
-  lines.push(pruned.length === 0 ? ok('离场 prune：超时应清空') : fail('离场 prune 未清空'))
-
-  const d = flightDurationMs(screenW, 300)
-  lines.push(d >= 5200 ? ok('飞行时长下限合理') : fail('飞行时长异常'))
 
   lines.push(ok(`验收样例已加载 ${DANMAKU_ACCEPTANCE_SAMPLES.length} 条（见 danmakuSamples）`))
 

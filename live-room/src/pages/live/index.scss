@@ -1,15 +1,18 @@
 .live-page {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100vh;
+  min-height: 100vh;
   overflow: hidden;
   box-sizing: border-box;
   background: #050508;
-  padding-left: 20px;
-  padding-right: 20px;
 }
 
 .live-page_header {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
 }
@@ -19,6 +22,7 @@
   flex-direction: row;
   justify-content: start;
   align-items: center;
+  margin-left: 20px;
   margin-top: 20px;
   margin-bottom: 20px;
 }
@@ -35,12 +39,17 @@
   margin-right: 20px;
 }
 
+/* 铺满整屏高度；header / dock 叠在上方（flex 里不占高度） */
 .live-page__stage {
-  flex: 1;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  position: relative;
-  background: #000;
+  height: 100%;
   min-height: 0;
+  background: #000;
 }
 
 .live-page_bullet_hint {
@@ -80,12 +89,16 @@
 }
 
 .live-page__dock {
-  flex-shrink: 0;
   position: relative;
+  z-index: 2;
+  flex-shrink: 0;
   width: 100%;
-  margin-top: -160px;
+  margin-top: auto;
   padding-top: 72px;
-  padding-bottom: calc(16px + constant(safe-area-inset-bottom));
+  /* constant: iOS 11.0–11.2；env: 之后机型；需 H5 viewport 含 viewport-fit=cover 才有非零 inset */
+  padding-bottom: calc(8px + constant(safe-area-inset-bottom));
+  /* 勿写 env(..., 0px) 两参数形式：部分基础库 WXSS 解析失败会导致整页样式不生效（白屏） */
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   background: linear-gradient(
     180deg,
@@ -102,31 +115,66 @@
  */
 .live-page--camera {
   .live-page__dock {
-    margin-top: 0;
+    margin-top: auto;
     padding-top: 16px;
   }
 }
 
-.live-page__danmaku {
-  width: 100%;
-  padding: 0 24px 12px;
+.live-page__danmaku-newjoiner {
+  position: relative;
+  margin-left: 12px;
+  padding: 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-sizing: border-box;
-  max-height: 220px;
-  min-height: 72px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 10px;
+  font-size: 24px;
+}
+/*
+ * 外层裁切：列表区用 View + overflow-y（非 scroll-view），加宽 + 负边距把纵向滚动条裁到可视区外。
+ * 最大高度与 constants/danmaku 中 DANMAKU_DOCK_SCROLL_MAX_PX 保持一致。
+ */
+.live-page__danmaku-wrap {
+  width: 60%;
   overflow: hidden;
-  pointer-events: none;
+  padding: 0 0 12px 12px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.live-page__danmaku {
+  max-height: 440px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  width: calc(100% + 20px);
+  margin-right: -20px;
+  padding-right: 20px;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.live-page__danmaku::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .live-page__danmaku-row {
   width: 100%;
   display: flex;
   justify-content: flex-start;
+  margin-bottom: 10px;
 }
 
+.live-page__danmaku-row:last-child {
+  margin-bottom: 0;
+}
+
+/* 默认单行胶囊；--multiline 为小程序 WXSS 兼容（勿用 @container） */
 .live-page__danmaku-pill {
   max-width: 100%;
   padding: 12px 20px;
@@ -138,6 +186,10 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+}
+
+.live-page__danmaku-pill--multiline {
+  border-radius: 14px;
 }
 
 .live-page__danmaku-nick {
@@ -158,10 +210,25 @@
 
 .live-page__composer {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 12px;
   padding: 0 24px 14px;
   pointer-events: auto;
+}
+
+.live-page__composer-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.live-page__composer-emoji-toggle {
+  flex-shrink: 0;
+  font-size: 40px;
+  line-height: 1;
+  padding: 8px 4px;
 }
 
 .live-page__composer-input {
@@ -174,6 +241,7 @@
   box-sizing: border-box;
   font-size: 28px;
   color: #fff;
+  min-width: 0;
 }
 
 .live-page__composer-placeholder {
@@ -185,5 +253,34 @@
   font-size: 28px;
   font-weight: 600;
   color: #ff8fab;
-  padding: 16px 12px;
+  padding: 16px 8px;
+}
+
+.live-page__composer-emoji-scroll {
+  width: 100%;
+  height: 200px;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.live-page__composer-emoji-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.live-page__composer-emoji-panel {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px 6px;
+  padding: 8px 0 4px;
+  box-sizing: border-box;
+}
+
+.live-page__composer-emoji-item {
+  text-align: center;
+  font-size: 36px;
+  line-height: 1.15;
+  padding: 6px 0;
 }

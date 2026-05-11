@@ -1,65 +1,68 @@
-import { DANMAKU_LANE_GAP_PX, DANMAKU_SPEED_PX_PER_MS } from '@/constants/danmaku'
+import { DANMAKU_FLIGHT_TAIL_PX, DANMAKU_SPEED_PX_PER_MS } from '@/constants/danmaku'
 
-export type LaneActive = {
-  id: string
-  lane: number
-  t0: number
-  w: number
-}
-
-/** 估算弹幕条宽度（px），用于碰撞与时间计算 */
-export function estimateDanmakuWidthPx(text: string, screenW: number): number {
+/** 估算弹幕条宽度（px），用于时间片长度 */
+export function estimateDanmakuWidthPx(text: string): number {
   const avatar = 36
   const pad = 28
-  const perChar = 13
-  const textW = Math.min(screenW * 0.72, Math.max(40, text.length * perChar))
-  return Math.ceil(avatar + pad + textW)
+  const perChar = 48
+  return Math.ceil(avatar + pad + text.length * perChar)
 }
 
-/** 穿过屏幕所需时间：从右侧外到左侧外 */
-export function flightDurationMs(screenW: number, w: number, speed: number = DANMAKU_SPEED_PX_PER_MS): number {
-  const dist = screenW + w
-  return Math.max(10000, Math.ceil(dist / speed))
-}
-
-export function pruneLaneActives(actives: LaneActive[], now: number, screenW: number, speed: number): LaneActive[] {
-  return actives.filter((a) => {
-    const x = screenW - speed * (now - a.t0)
-    return x + a.w > -40
-  })
+/** 单条弹幕水平飞行总路程（px），与 FlyingDanmakuLayer 的 --fly-end 一致 */
+export function flightDistancePx(screenW: number, w: number): number {
+  return screenW + w + DANMAKU_FLIGHT_TAIL_PX
 }
 
 /**
- * 新弹幕左边缘从 x=screenW 入场，与轨道上仍在场的弹幕做一维碰撞检测
+ * 穿过屏幕所需时间；路程与动画位移一致，保证每条弹幕水平速度均为 `speed`（px/ms）。
  */
-export function laneCollidesAtSpawn(
-  laneActives: LaneActive[],
-  now: number,
-  wNew: number,
-  screenW: number,
-  speed: number,
-  gap: number = DANMAKU_LANE_GAP_PX
-): boolean {
-  const xNew = screenW
-  for (const a of laneActives) {
-    const xA = screenW - speed * (now - a.t0)
-    const overlap = xA + a.w > xNew - gap && xA < xNew + wNew + gap
-    if (overlap) return true
-  }
-  return false
+export function flightDurationMs(screenW: number, w: number, speed: number = DANMAKU_SPEED_PX_PER_MS): number {
+  const dist = flightDistancePx(screenW, w)
+  return Math.max(100, Math.ceil(dist / speed))
 }
 
-export function pickLaneForSpawn(
-  lanes: LaneActive[][],
-  now: number,
-  wNew: number,
-  screenW: number,
-  speed: number = DANMAKU_SPEED_PX_PER_MS
-): number | null {
-  for (let i = 0; i < lanes.length; i++) {
-    const cleaned = pruneLaneActives(lanes[i], now, screenW, speed)
-    lanes[i] = cleaned
-    if (!laneCollidesAtSpawn(cleaned, now, wNew, screenW, speed)) return i
+/**
+ * 单条弹幕占轨时间片长度（ms）：`(screenW + w) / v`（与需求一致；不含尾量，由多轨消化）。
+ */
+export function laneSlotDurationMs(screenW: number, w: number, speed: number = DANMAKU_SPEED_PX_PER_MS): number {
+  return Math.max(1, (screenW + w) / speed)
+}
+
+export type LanePickResult = {
+  lane: number
+  /** 实际允许开启动画的时间戳（与 `now` 同源，一般为 performance.now） */
+  spawnAt: number
+}
+
+/**
+ * 轨道时间片调度：优先选 `nextAllowTime <= now` 的轨道（其中 next 最小者）；
+ * 否则选全局 `nextAllowTime` 最小的轨道，`spawnAt` 为该值（需延迟发射）。
+ */
+export function pickLaneByNextAllowTime(
+  nextAllowTimes: number[],
+  now: number
+): LanePickResult {
+  const n = nextAllowTimes.length
+  if (n === 0) return { lane: 0, spawnAt: now }
+
+  let readyLane = -1
+  let readyMin = Infinity
+  for (let i = 0; i < n; i++) {
+    const t = nextAllowTimes[i]
+    if (t <= now && t < readyMin) {
+      readyMin = t
+      readyLane = i
+    }
   }
-  return null
+  if (readyLane >= 0) return { lane: readyLane, spawnAt: now }
+
+  let lane = 0
+  let minT = nextAllowTimes[0]
+  for (let i = 1; i < n; i++) {
+    if (nextAllowTimes[i] < minT) {
+      minT = nextAllowTimes[i]
+      lane = i
+    }
+  }
+  return { lane, spawnAt: minT }
 }
