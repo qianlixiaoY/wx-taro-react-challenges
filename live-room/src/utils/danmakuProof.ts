@@ -69,7 +69,7 @@ export function runDanmakuProofSuite(): ProofLine[] {
       : fail(`nextAllow 全忙：期望 lane=0 spawnAt=${now + 3000}，实际 lane=${pickWait.lane} spawnAt=${pickWait.spawnAt}`)
   )
 
-  const slot = laneSlotDurationMs(screenW, 100, speed)
+  const slot = laneSlotDurationMs(100, speed)
   lines.push(slot > 0 ? ok('轨道时间片 laneSlotDurationMs > 0') : fail('轨道时间片应大于 0'))
 
   const wProbe = 300

@@ -22,10 +22,10 @@ export function flightDurationMs(screenW: number, w: number, speed: number = DAN
 }
 
 /**
- * 单条弹幕占轨时间片长度（ms）：`(screenW + w) / v`（与需求一致；不含尾量，由多轨消化）。
+ * 单条弹幕完全从屏幕右侧进入占轨时间片长度（ms）：`w / v`（与需求一致；不含尾量，由多轨消化）。
  */
-export function laneSlotDurationMs(screenW: number, w: number, speed: number = DANMAKU_SPEED_PX_PER_MS): number {
-  return Math.max(1, (screenW + w) / speed)
+export function laneSlotDurationMs(w: number, speed: number = DANMAKU_SPEED_PX_PER_MS): number {
+  return Math.ceil(w / speed)
 }
 
 export type LanePickResult = {

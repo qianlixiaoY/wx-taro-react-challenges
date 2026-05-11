@@ -134,7 +134,7 @@ export const FlyingDanmakuLayer = forwardRef<FlyingDanmakuHandle, FlyingDanmakuL
 
         const w = estimateDanmakuWidthPx(msg.text)
         const { lane, spawnAt } = pickLaneByNextAllowTime(nextAllowRef.current, now)
-        const slotMs = laneSlotDurationMs(W, w, DANMAKU_SPEED_PX_PER_MS)
+        const slotMs = laneSlotDurationMs(w, DANMAKU_SPEED_PX_PER_MS)
         nextAllowRef.current[lane] = spawnAt + slotMs
 
         const durationMs = flightDurationMs(W, w, DANMAKU_SPEED_PX_PER_MS)
